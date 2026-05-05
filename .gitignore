@@ -1,0 +1,46 @@
+# ============================================
+# GITIGNORE — files git should never track
+# ============================================
+
+# Python creates these automatically when it runs my code
+# I didn't write them, they're just compiled junk
+__pycache__/
+*.pyc
+*.pyo
+
+# This is where all my installed libraries live (venv folder)
+# It's massive and anyone can just run pip install -r requirements.txt to get it back
+# Never push this
+.venv/
+venv/
+
+# Another auto-generated python thing when packages install, not my code
+*.egg-info/
+
+# My trained ML model, gets created when I run train.py
+# Anyone can just run train.py to recreate it
+ml/model.pkl
+
+# MY PASSWORDS AND SECRET KEYS LIVE HERE
+# If this gets pushed to GitHub my credentials are public
+# NEVER commit this, ever
+.env
+
+# My fake transaction dataset, gets created by generate_data.py
+# No need to store it, just run the script again
+data/transactions.csv
+
+# All my JavaScript libraries for React live here
+# Can have 200,000+ files, way too big to push
+# Anyone can get it back by running npm install
+frontend/node_modules/
+frontend/.env.local  # React app secrets
+frontend/build/      # compiled version of my React app, auto-generated
+
+# Jupyter auto-saves these checkpoint files as I work
+# Not actual code I wrote
+.ipynb_checkpoints/
+
+# Mac secretly creates this in every folder I open in Finder
+# Has nothing to do with my code, just ignore it
+.DS_Store

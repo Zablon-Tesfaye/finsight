@@ -22,16 +22,13 @@ app = FastAPI(title="FinSight API", version="1.0.0")
 # ============================================
 # CORS MIDDLEWARE
 # Allows our frontend to talk to this backend
-# Without this the browser blocks all requests
+# allow_credentials must be False when
+# allow_origins is set to wildcard "*"
 # ============================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://finsight-alpha-seven.vercel.app",
-        "*"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

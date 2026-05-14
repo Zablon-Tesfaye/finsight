@@ -6,7 +6,7 @@ import axios from 'axios';
 // When we deploy, this will change to the
 // production URL on Render
 // ============================================
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = 'https://finsight-amc4.onrender.com';
 
 // ============================================
 // AXIOS INSTANCE

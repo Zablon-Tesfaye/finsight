@@ -6,23 +6,20 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
+    defs,
+    linearGradient,
+    stop,
+    Area,
+    AreaChart,
   } from 'recharts';
   
-  // ============================================
-  // SPENDING CHART
-  // Line chart showing spending over time
-  // Takes transactions as a prop and groups
-  // them by date to show the trend
-  // ============================================
   export default function SpendingChart({ transactions }) {
-    // group transactions by date and sum amounts
     const dataMap = transactions.reduce((acc, t) => {
-      const date = t.date.split(' ')[0]; // get just the date part
+      const date = t.date.split(' ')[0];
       acc[date] = (acc[date] || 0) + t.amount;
       return acc;
     }, {});
   
-    // convert to array and sort by date
     const data = Object.entries(dataMap)
       .map(([date, amount]) => ({
         date,
@@ -30,35 +27,59 @@ import {
       }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
   
+    const CustomTooltip = ({ active, payload, label }) => {
+      if (active && payload && payload.length) {
+        return (
+          <div style={styles.tooltip}>
+            <p style={styles.tooltipDate}>{label}</p>
+            <p style={styles.tooltipValue}>
+              ${payload[0].value.toLocaleString()}
+            </p>
+          </div>
+        );
+      }
+      return null;
+    };
+  
     return (
       <div style={styles.container}>
-        <h3 style={styles.title}>Spending Over Time</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+        <div style={styles.header}>
+          <h3 style={styles.title}>Spending Over Time</h3>
+          <span style={styles.badge}>2024</span>
+        </div>
+        <ResponsiveContainer width="100%" height={280}>
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
             <XAxis
               dataKey="date"
-              stroke="#94a3b8"
-              tick={{ fontSize: 11 }}
+              stroke="#334155"
+              tick={{ fill: '#94A3B8', fontSize: 11 }}
               interval="preserveStartEnd"
+              tickLine={false}
             />
-            <YAxis stroke="#94a3b8" tick={{ fontSize: 11 }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                color: '#f1f5f9',
-              }}
+            <YAxis
+              stroke="#334155"
+              tick={{ fill: '#94A3B8', fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
             />
-            <Line
+            <Tooltip content={<CustomTooltip />} />
+            <Area
               type="monotone"
               dataKey="amount"
-              stroke="#38bdf8"
+              stroke="#10B981"
               strokeWidth={2}
+              fill="url(#colorAmount)"
               dot={false}
+              activeDot={{ r: 4, fill: '#10B981', strokeWidth: 0 }}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     );
@@ -66,15 +87,49 @@ import {
   
   const styles = {
     container: {
-      backgroundColor: '#1e293b',
-      padding: '24px',
-      borderRadius: '12px',
+      backgroundColor: 'rgba(22, 27, 34, 0.9)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      padding: '28px',
+      borderRadius: '20px',
+      marginBottom: '24px',
+    },
+    header: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: '24px',
     },
     title: {
-      color: '#f1f5f9',
-      fontSize: '16px',
+      color: '#F8FAFC',
+      fontSize: '15px',
       fontWeight: '600',
-      margin: '0 0 16px 0',
+      margin: '0',
+      letterSpacing: '-0.3px',
+    },
+    badge: {
+      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      color: '#10B981',
+      padding: '4px 10px',
+      borderRadius: '20px',
+      fontSize: '12px',
+      fontWeight: '500',
+    },
+    tooltip: {
+      backgroundColor: '#161B22',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '10px',
+      padding: '10px 14px',
+    },
+    tooltipDate: {
+      color: '#94A3B8',
+      fontSize: '12px',
+      margin: '0 0 4px 0',
+    },
+    tooltipValue: {
+      color: '#10B981',
+      fontSize: '16px',
+      fontWeight: '700',
+      margin: '0',
     },
   };

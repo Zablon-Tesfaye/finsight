@@ -17,9 +17,7 @@ venv/
 # Another auto-generated python thing when packages install, not my code
 *.egg-info/
 
-# My trained ML model, gets created when I run train.py
-# Anyone can just run train.py to recreate it
-ml/model.pkl
+
 
 # MY PASSWORDS AND SECRET KEYS LIVE HERE
 # If this gets pushed to GitHub my credentials are public

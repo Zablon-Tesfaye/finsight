@@ -2,53 +2,61 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 
-// ============================================
-// LOGIN PAGE
-// Handles user login and stores JWT token
-// ============================================
 export default function Login() {
-  // useState stores the form values and error message
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // ============================================
-  // HANDLE SUBMIT
-  // Called when user clicks the login button
-  // ============================================
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError('');
     try {
-      // send email and password to backend
       const response = await api.post('/auth/login', { email, password });
-      
-      // store the JWT token in localStorage
       localStorage.setItem('token', response.data.access_token);
-      
-      // redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
       setError('Invalid email or password');
+      setLoading(false);
     }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleSubmit();
   };
 
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>FinSight</h1>
-        <p style={styles.subtitle}>Sign in to your account</p>
+      {/* BACKGROUND GLOW */}
+      <div style={styles.glow} />
 
-        {error && <p style={styles.error}>{error}</p>}
+      <div style={styles.card}>
+        {/* LOGO */}
+        <div style={styles.logoWrapper}>
+          <div style={styles.logoIcon}>💹</div>
+          <h1 style={styles.logo}>FinSight</h1>
+        </div>
+
+        <p style={styles.subtitle}>
+          AI-powered finance intelligence
+        </p>
+
+        {error && (
+          <div style={styles.errorBox}>
+            <span>⚠ {error}</span>
+          </div>
+        )}
 
         <div style={styles.form}>
           <div style={styles.field}>
-            <label style={styles.label}>Email</label>
+            <label style={styles.label}>Email address</label>
             <input
               style={styles.input}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="you@example.com"
             />
           </div>
@@ -60,102 +68,148 @@ export default function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder="••••••••"
             />
           </div>
 
-          <button style={styles.button} onClick={handleSubmit}>
-            Sign In
+          <button
+            style={{
+              ...styles.button,
+              opacity: loading ? 0.7 : 1,
+            }}
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </div>
 
-        <p style={styles.link}>
+        <p style={styles.footer}>
           Don't have an account?{' '}
-          <Link to="/register" style={styles.linkText}>Register</Link>
+          <Link to="/register" style={styles.link}>
+            Create one
+          </Link>
         </p>
       </div>
     </div>
   );
 }
 
-// ============================================
-// STYLES
-// Inline styles to keep everything in one file
-// ============================================
 const styles = {
   container: {
     minHeight: '100vh',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0f172a',
+    backgroundColor: '#0B0F14',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  glow: {
+    position: 'absolute',
+    width: '600px',
+    height: '600px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    pointerEvents: 'none',
   },
   card: {
-    backgroundColor: '#1e293b',
-    padding: '40px',
-    borderRadius: '12px',
+    backgroundColor: 'rgba(22, 27, 34, 0.9)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    padding: '48px',
+    borderRadius: '24px',
     width: '100%',
-    maxWidth: '400px',
+    maxWidth: '420px',
+    position: 'relative',
+    zIndex: 1,
   },
-  title: {
-    color: '#38bdf8',
+  logoWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+    marginBottom: '8px',
+  },
+  logoIcon: {
     fontSize: '28px',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    margin: '0 0 8px 0',
+  },
+  logo: {
+    color: '#10B981',
+    fontSize: '28px',
+    fontWeight: '700',
+    letterSpacing: '-0.5px',
   },
   subtitle: {
-    color: '#94a3b8',
+    color: '#94A3B8',
     textAlign: 'center',
-    marginBottom: '32px',
+    fontSize: '14px',
+    marginBottom: '36px',
+    letterSpacing: '0.3px',
+  },
+  errorBox: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    border: '1px solid rgba(239, 68, 68, 0.3)',
+    borderRadius: '10px',
+    padding: '12px 16px',
+    color: '#EF4444',
+    fontSize: '14px',
+    marginBottom: '20px',
+    textAlign: 'center',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: '20px',
   },
   field: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px',
+    gap: '8px',
   },
   label: {
-    color: '#94a3b8',
-    fontSize: '14px',
+    color: '#94A3B8',
+    fontSize: '13px',
+    fontWeight: '500',
+    letterSpacing: '0.3px',
   },
   input: {
-    padding: '10px 14px',
-    borderRadius: '8px',
-    border: '1px solid #334155',
-    backgroundColor: '#0f172a',
-    color: '#f1f5f9',
-    fontSize: '14px',
+    padding: '14px 16px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    color: '#F8FAFC',
+    fontSize: '15px',
     outline: 'none',
+    transition: 'border-color 0.2s',
+    width: '100%',
   },
   button: {
-    padding: '12px',
-    backgroundColor: '#38bdf8',
-    color: '#0f172a',
+    padding: '14px',
+    backgroundColor: '#10B981',
+    color: '#fff',
     border: 'none',
-    borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: 'bold',
+    borderRadius: '12px',
+    fontSize: '15px',
+    fontWeight: '600',
     cursor: 'pointer',
     marginTop: '8px',
+    letterSpacing: '0.3px',
+    transition: 'opacity 0.2s',
   },
-  error: {
-    color: '#f87171',
+  footer: {
+    color: '#94A3B8',
     textAlign: 'center',
-    marginBottom: '16px',
-  },
-  link: {
-    color: '#94a3b8',
-    textAlign: 'center',
-    marginTop: '24px',
+    marginTop: '28px',
     fontSize: '14px',
   },
-  linkText: {
-    color: '#38bdf8',
+  link: {
+    color: '#10B981',
     textDecoration: 'none',
+    fontWeight: '500',
   },
 };

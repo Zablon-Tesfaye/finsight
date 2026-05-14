@@ -21,13 +21,16 @@ app = FastAPI(title="FinSight API", version="1.0.0")
 
 # ============================================
 # CORS MIDDLEWARE
-# CORS lets your React frontend talk to this
-# backend. Without this the browser would
-# block all requests from the frontend
+# Allows our frontend to talk to this backend
+# Without this the browser blocks all requests
 # ============================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://finsight-alpha-seven.vercel.app",
+        "*"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,7 +39,6 @@ app.add_middleware(
 # ============================================
 # IMPORT AND CONNECT ROUTES
 # Each router handles a different part of the app
-# We give each one a prefix so URLs are organized
 # ============================================
 from routes.auth import router as auth_router
 from routes.transactions import router as transactions_router
@@ -48,8 +50,7 @@ app.include_router(predictions_router, prefix="/predict", tags=["Predictions"])
 
 # ============================================
 # ROOT ENDPOINT
-# Just a health check to confirm the API is running
-# Visit http://localhost:8000 to see this
+# Health check to confirm the API is running
 # ============================================
 @app.get("/")
 def root():

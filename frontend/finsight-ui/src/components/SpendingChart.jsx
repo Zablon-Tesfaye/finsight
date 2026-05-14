@@ -1,16 +1,11 @@
 import {
-    LineChart,
-    Line,
+    AreaChart,
+    Area,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    defs,
-    linearGradient,
-    stop,
-    Area,
-    AreaChart,
   } from 'recharts';
   
   export default function SpendingChart({ transactions }) {

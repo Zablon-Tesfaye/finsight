@@ -1,12 +1,20 @@
-// ============================================
-// TRANSACTION TABLE
-// Shows all transactions in a table
-// Flagged transactions are highlighted in red
-// ============================================
 export default function TransactionTable({ transactions }) {
+    const flaggedCount = transactions.filter((t) => t.is_flagged).length;
+  
     return (
       <div style={styles.container}>
-        <h3 style={styles.title}>All Transactions</h3>
+        <div style={styles.header}>
+          <div>
+            <h3 style={styles.title}>All Transactions</h3>
+            <p style={styles.subtitle}>{transactions.length} total transactions</p>
+          </div>
+          {flaggedCount > 0 && (
+            <div style={styles.alertBadge}>
+              ⚠ {flaggedCount} suspicious transaction{flaggedCount > 1 ? 's' : ''} detected
+            </div>
+          )}
+        </div>
+  
         <div style={styles.tableWrapper}>
           <table style={styles.table}>
             <thead>
@@ -22,12 +30,26 @@ export default function TransactionTable({ transactions }) {
               {transactions.map((t) => (
                 <tr
                   key={t.id}
-                  style={t.is_flagged ? styles.flaggedRow : styles.normalRow}
+                  style={t.is_flagged ? styles.flaggedRow : styles.row}
                 >
-                  <td style={styles.td}>{t.date}</td>
-                  <td style={styles.td}>{t.merchant}</td>
-                  <td style={styles.td}>{t.category}</td>
-                  <td style={styles.td}>${t.amount.toFixed(2)}</td>
+                  <td style={styles.td}>
+                    <span style={styles.date}>{t.date.split(' ')[0]}</span>
+                    <span style={styles.time}>{t.date.split(' ')[1]}</span>
+                  </td>
+                  <td style={styles.td}>
+                    <span style={styles.merchant}>{t.merchant}</span>
+                  </td>
+                  <td style={styles.td}>
+                    <span style={styles.categoryBadge}>{t.category}</span>
+                  </td>
+                  <td style={styles.td}>
+                    <span style={{
+                      ...styles.amount,
+                      color: t.is_flagged ? '#EF4444' : '#F8FAFC'
+                    }}>
+                      ${t.amount.toFixed(2)}
+                    </span>
+                  </td>
                   <td style={styles.td}>
                     {t.is_flagged ? (
                       <span style={styles.flaggedBadge}>⚠ Flagged</span>
@@ -46,16 +68,39 @@ export default function TransactionTable({ transactions }) {
   
   const styles = {
     container: {
-      backgroundColor: '#1e293b',
-      padding: '24px',
-      borderRadius: '12px',
+      backgroundColor: 'rgba(22, 27, 34, 0.9)',
+      backdropFilter: 'blur(20px)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      padding: '28px',
+      borderRadius: '20px',
+      marginBottom: '24px',
+    },
+    header: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
       marginBottom: '24px',
     },
     title: {
-      color: '#f1f5f9',
-      fontSize: '16px',
+      color: '#F8FAFC',
+      fontSize: '15px',
       fontWeight: '600',
-      margin: '0 0 16px 0',
+      margin: '0 0 4px 0',
+      letterSpacing: '-0.3px',
+    },
+    subtitle: {
+      color: '#94A3B8',
+      fontSize: '13px',
+      margin: '0',
+    },
+    alertBadge: {
+      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      border: '1px solid rgba(239, 68, 68, 0.2)',
+      color: '#EF4444',
+      padding: '8px 14px',
+      borderRadius: '10px',
+      fontSize: '13px',
+      fontWeight: '500',
     },
     tableWrapper: {
       overflowX: 'auto',
@@ -65,37 +110,71 @@ export default function TransactionTable({ transactions }) {
       borderCollapse: 'collapse',
     },
     th: {
-      color: '#94a3b8',
-      fontSize: '13px',
+      color: '#94A3B8',
+      fontSize: '12px',
       fontWeight: '600',
       textAlign: 'left',
-      padding: '12px 16px',
-      borderBottom: '1px solid #334155',
+      padding: '10px 16px',
+      borderBottom: '1px solid rgba(255,255,255,0.06)',
+      letterSpacing: '0.5px',
+      textTransform: 'uppercase',
     },
     td: {
-      color: '#f1f5f9',
-      fontSize: '14px',
-      padding: '12px 16px',
-      borderBottom: '1px solid #1e293b',
+      padding: '14px 16px',
+      borderBottom: '1px solid rgba(255,255,255,0.03)',
+      verticalAlign: 'middle',
     },
-    normalRow: {
-      backgroundColor: 'transparent',
+    row: {
+      transition: 'background-color 0.15s',
     },
     flaggedRow: {
-      backgroundColor: 'rgba(248, 113, 113, 0.1)',
+      backgroundColor: 'rgba(239, 68, 68, 0.05)',
+      borderLeft: '3px solid #EF4444',
+    },
+    date: {
+      color: '#F8FAFC',
+      fontSize: '14px',
+      display: 'block',
+    },
+    time: {
+      color: '#94A3B8',
+      fontSize: '12px',
+      display: 'block',
+      marginTop: '2px',
+    },
+    merchant: {
+      color: '#F8FAFC',
+      fontSize: '14px',
+      fontWeight: '500',
+    },
+    categoryBadge: {
+      backgroundColor: 'rgba(99, 102, 241, 0.1)',
+      color: '#818CF8',
+      padding: '3px 10px',
+      borderRadius: '20px',
+      fontSize: '12px',
+      fontWeight: '500',
+    },
+    amount: {
+      fontSize: '14px',
+      fontWeight: '600',
     },
     flaggedBadge: {
-      backgroundColor: 'rgba(248, 113, 113, 0.2)',
-      color: '#f87171',
-      padding: '4px 8px',
-      borderRadius: '4px',
+      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      color: '#EF4444',
+      padding: '4px 10px',
+      borderRadius: '20px',
       fontSize: '12px',
+      fontWeight: '500',
+      border: '1px solid rgba(239, 68, 68, 0.2)',
     },
     normalBadge: {
-      backgroundColor: 'rgba(56, 189, 248, 0.2)',
-      color: '#38bdf8',
-      padding: '4px 8px',
-      borderRadius: '4px',
+      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      color: '#10B981',
+      padding: '4px 10px',
+      borderRadius: '20px',
       fontSize: '12px',
+      fontWeight: '500',
+      border: '1px solid rgba(16, 185, 129, 0.2)',
     },
-  }; 
+  };

@@ -29,6 +29,8 @@ ALGORITHM = os.getenv("ALGORITHM")
 # so it doesn't reload it on every request
 # ============================================
 model_path = os.path.join(os.path.dirname(__file__), '..', '..', 'ml', 'model.pkl')
+if not os.path.exists(model_path):
+    model_path = os.path.join('/app', 'ml', 'model.pkl')
 model = joblib.load(model_path)
 
 # category encoder — must match what we used in train.py

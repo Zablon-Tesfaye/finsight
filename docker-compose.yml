@@ -1,46 +1,40 @@
-# ============================================
-# DOCKER COMPOSE
-# Orchestrates multiple containers together
-# Service 1: backend (FastAPI app)
-# Service 2: db (PostgreSQL database)
-# ============================================
-
-version: '3.8'
-
 services:
-  # ============================================
-  # BACKEND SERVICE
-  # Builds from our Dockerfile in backend/
-  # ============================================
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: finsight
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-YOUR_LOCAL_DB_PASSWORD}
+      POSTGRES_DB: finsight
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finsight -d finsight"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/finsight_db
-      - SECRET_KEY=supersecretkey123
-      - ALGORITHM=HS256
-      - ACCESS_TOKEN_EXPIRE_MINUTES=30
-    depends_on:
-      - db
+      DATABASE_URL: postgresql://finsight:${POSTGRES_PASSWORD:-YOUR_LOCAL_DB_PASSWORD}@db:5432/finsight
+      SECRET_KEY: ${SECRET_KEY:-YOUR_LOCAL_JWT_SECRET}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      FINSIGHT_MODEL_PATH: /app/ml/artifacts/model.joblib
     volumes:
       - ./ml:/app/ml
-      - ./data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
 
-  # ============================================
-  # DATABASE SERVICE
-  # Official PostgreSQL image
-  # ============================================
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=finsight_db
+  frontend:
+    build: ./frontend
     ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - "5173:5173"
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

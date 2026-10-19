@@ -36,5 +36,13 @@ services:
     depends_on:
       - backend
 
+  trainer:
+    build: ./backend
+    working_dir: /workspace
+    command: python ml/run_experiment.py
+    volumes:
+      - ./ml:/workspace/ml
+    profiles: ["training"]
+
 volumes:
   postgres_data:

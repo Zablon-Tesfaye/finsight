@@ -1,87 +1,62 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from jose import jwt, JWTError
-from fastapi.security import OAuth2PasswordBearer
-import os
-import sys
-from dotenv import load_dotenv
+"""Authenticated transactions with automatic anomaly detection."""
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from datetime import datetime
+import os
+
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt, JWTError
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
 from database import get_db
+from ml_service import analyze_transaction
 from models import Transaction
 
-load_dotenv()
-
-# ============================================
-# SETUP
-# ============================================
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
 
-# ============================================
-# SCHEMA
-# Defines what a transaction request looks like
-# ============================================
 class TransactionCreate(BaseModel):
-    date: str
-    amount: float
-    merchant: str
-    category: str
+    date: datetime
+    amount: float = Field(gt=0, allow_inf_nan=False)
+    merchant: str = Field(min_length=1, max_length=120)
+    category: str = Field(min_length=1, max_length=80)
 
-# ============================================
-# HELPER — GET CURRENT USER FROM TOKEN
-# Reads the JWT token from the request header
-# and returns the current logged in user's id
-# ============================================
-def get_current_user(token: str = Depends(oauth2_scheme)):
+
+def get_current_user(token: str = Depends(oauth2_scheme)) -> int:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("user_id")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_id
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        claims = jwt.decode(token, os.environ["SECRET_KEY"], algorithms=[os.getenv("ALGORITHM", "HS256")])
+        return int(claims["user_id"])
+    except (JWTError, ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(status_code=401, detail="Invalid token") from exc
 
-# ============================================
-# GET TRANSACTIONS
-# GET /transactions
-# Returns all transactions for the logged in user
-# ============================================
+
 @router.get("/")
-def get_transactions(
-    db: Session = Depends(get_db),
-    current_user: int = Depends(get_current_user)
-):
-    transactions = db.query(Transaction).filter(
-        Transaction.user_id == current_user
-    ).all()
-    return transactions
+def get_transactions(db: Session = Depends(get_db), user_id: int = Depends(get_current_user)):
+    return db.query(Transaction).filter(Transaction.user_id == user_id).order_by(Transaction.id.desc()).all()
 
-# ============================================
-# ADD TRANSACTION
-# POST /transactions
-# Adds a new transaction for the logged in user
-# ============================================
-@router.post("/")
+
+@router.post("/", status_code=201)
 def add_transaction(
-    transaction: TransactionCreate,
+    item: TransactionCreate,
     db: Session = Depends(get_db),
-    current_user: int = Depends(get_current_user)
+    user_id: int = Depends(get_current_user),
 ):
-    new_transaction = Transaction(
-        user_id=current_user,
-        date=transaction.date,
-        amount=transaction.amount,
-        merchant=transaction.merchant,
-        category=transaction.category,
-        is_flagged=False
+    try:
+        verdict = analyze_transaction(item.amount, item.date.hour, item.category)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    entry = Transaction(
+        user_id=user_id,
+        date=item.date.isoformat(),
+        amount=item.amount,
+        merchant=item.merchant.strip(),
+        category=item.category.strip(),
+        is_flagged=verdict["is_anomaly"],
     )
-    db.add(new_transaction)
+    db.add(entry)
     db.commit()
-    db.refresh(new_transaction)
-    return new_transaction
+    db.refresh(entry)
+    return entry

@@ -1,4 +1,4 @@
-"""Load the trained fraud detector and provide consistent inference."""
+"""Load the trained anomaly detector and keep inference consistent."""
 
 from functools import lru_cache
 from pathlib import Path
@@ -7,17 +7,15 @@ import os
 import joblib
 import pandas as pd
 
-MODEL_PATH = Path(os.getenv("FINSIGHT_MODEL_PATH", "/app/ml/artifacts/model.joblib"))
+DEFAULT_MODEL_PATH = Path(__file__).resolve().parent.parent / "ml" / "artifacts" / "model.joblib"
 
 
 @lru_cache(maxsize=1)
 def get_detector():
-    # Load the full pipeline so training and inference share preprocessing.
-    if not MODEL_PATH.is_file():
-        raise FileNotFoundError(
-            f"No trained model at {MODEL_PATH}. Run ml/run_experiment.py first."
-        )
-    return joblib.load(MODEL_PATH)
+    path = Path(os.getenv("FINSIGHT_MODEL_PATH", str(DEFAULT_MODEL_PATH)))
+    if not path.is_file():
+        raise FileNotFoundError(f"Model not found: {path}. Run python ml/run_experiment.py first.")
+    return joblib.load(path)
 
 
 def analyze_transaction(amount: float, hour_of_day: int, category: str) -> dict:
@@ -26,9 +24,9 @@ def analyze_transaction(amount: float, hour_of_day: int, category: str) -> dict:
         "hour_of_day": hour_of_day,
         "category": category,
     }])
-    model = get_detector()
-    flagged = bool(model.predict(record)[0] == -1)
-    score = float(model.decision_function(record)[0])
+    detector = get_detector()
+    flagged = bool(detector.predict(record)[0] == -1)
+    score = float(detector.decision_function(record)[0])
     return {
         "is_anomaly": flagged,
         "anomaly_score": round(score, 5),

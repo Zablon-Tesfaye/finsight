@@ -9,6 +9,7 @@ from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 from sklearn.model_selection import train_test_split
 
 from experiment import ExperimentConfig, FEATURES, build_detector, make_transactions, predict_flags
+from baseline import predict_rule_flags
 
 
 def main():
@@ -36,7 +37,20 @@ def main():
     tn, fp, fn, tp = confusion_matrix(
         test["is_anomaly"], predicted, labels=[0, 1]
     ).ravel()
+    baseline_flags = predict_rule_flags(test)
+    base_tn, base_fp, base_fn, base_tp = confusion_matrix(
+        test["is_anomaly"], baseline_flags, labels=[0, 1]
+    ).ravel()
+    false_alarm_reduction = (1 - fp / base_fp) * 100 if base_fp else None
     report = {
+        "fixed_rule_baseline": {
+            "description": "amount > 150 OR hour < 5 (predefined, not tuned on test labels)",
+            "true_positives": int(base_tp), "false_positives": int(base_fp),
+            "false_negatives": int(base_fn), "true_negatives": int(base_tn),
+        },
+        "false_positive_reduction_percent_vs_rules": (
+            round(float(false_alarm_reduction), 2) if false_alarm_reduction is not None else None
+        ),
         "samples": len(records), "train_samples": len(train), "test_samples": len(test),
         "precision": float(precision), "recall": float(recall), "f1": float(f1),
         "true_positives": int(tp), "false_positives": int(fp),

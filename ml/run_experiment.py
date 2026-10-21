@@ -9,6 +9,10 @@ from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 from sklearn.model_selection import train_test_split
 
 from experiment import ExperimentConfig, FEATURES, build_detector, make_transactions, predict_flags
+from baseline import predict_rule_flags
+from data_checks import validate_transactions
+from validation import Confusion, false_alarm_reduction
+from reproducibility import metadata
 
 
 def main():
@@ -22,6 +26,7 @@ def main():
 
     config = ExperimentConfig(samples=args.samples, seed=args.seed)
     records = make_transactions(config)
+    validate_transactions(records)
     train, test = train_test_split(
         records, test_size=0.2, stratify=records["is_anomaly"], random_state=config.seed
     )
@@ -36,7 +41,24 @@ def main():
     tn, fp, fn, tp = confusion_matrix(
         test["is_anomaly"], predicted, labels=[0, 1]
     ).ravel()
+    baseline_flags = predict_rule_flags(test)
+    base_tn, base_fp, base_fn, base_tp = confusion_matrix(
+        test["is_anomaly"], baseline_flags, labels=[0, 1]
+    ).ravel()
+    reduction = false_alarm_reduction(
+        Confusion(int(tp), int(fp), int(fn), int(tn)),
+        Confusion(int(base_tp), int(base_fp), int(base_fn), int(base_tn)),
+    )
     report = {
+        **metadata(config),
+        "fixed_rule_baseline": {
+            "description": "amount > 150 OR hour < 5 (predefined, not tuned on test labels)",
+            "true_positives": int(base_tp), "false_positives": int(base_fp),
+            "false_negatives": int(base_fn), "true_negatives": int(base_tn),
+        },
+        "false_positive_reduction_percent_vs_rules": (
+            round(float(reduction), 2) if reduction is not None else None
+        ),
         "samples": len(records), "train_samples": len(train), "test_samples": len(test),
         "precision": float(precision), "recall": float(recall), "f1": float(f1),
         "true_positives": int(tp), "false_positives": int(fp),

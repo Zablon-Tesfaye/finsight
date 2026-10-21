@@ -12,6 +12,7 @@ from experiment import ExperimentConfig, FEATURES, build_detector, make_transact
 from baseline import predict_rule_flags
 from data_checks import validate_transactions
 from validation import Confusion, false_alarm_reduction
+from reproducibility import metadata
 
 
 def main():
@@ -49,6 +50,7 @@ def main():
         Confusion(int(base_tp), int(base_fp), int(base_fn), int(base_tn)),
     )
     report = {
+        **metadata(config),
         "fixed_rule_baseline": {
             "description": "amount > 150 OR hour < 5 (predefined, not tuned on test labels)",
             "true_positives": int(base_tp), "false_positives": int(base_fp),

@@ -13,3 +13,13 @@ class EvaluationTests(unittest.TestCase):
 
     def test_false_alarm_reduction(self):
         assert false_alarm_reduction(Confusion(1, 3, 1, 1), Confusion(1, 10, 1, 1)) == 70
+
+
+class ConfusionInputTests(unittest.TestCase):
+    def test_fractional_count_rejected(self):
+        with self.assertRaises(ValueError):
+            Confusion(1.5, 0, 0, 10)
+
+    def test_boolean_count_rejected(self):
+        with self.assertRaises(ValueError):
+            Confusion(True, 0, 0, 10)

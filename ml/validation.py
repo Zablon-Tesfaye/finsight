@@ -1,6 +1,7 @@
 """Model evaluation invariants and denominator-safe comparisons."""
 
 from dataclasses import dataclass
+from numbers import Integral
 
 
 @dataclass(frozen=True)
@@ -11,6 +12,10 @@ class Confusion:
     true_negative: int
 
     def __post_init__(self):
+        if any(not isinstance(value, Integral) or isinstance(value, bool)
+               for value in (self.true_positive, self.false_positive,
+                             self.false_negative, self.true_negative)):
+            raise ValueError("Confusion counts must be integers")
         if min(self.true_positive, self.false_positive,
                self.false_negative, self.true_negative) < 0:
             raise ValueError("Confusion counts must be nonnegative")

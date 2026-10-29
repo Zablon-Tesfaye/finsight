@@ -5,10 +5,12 @@ import numpy as np
 
 def population_stability_index(reference: list[float], current: list[float],
                                bins: int = 10, smoothing: float = 1e-6) -> float:
-    if bins < 2 or not reference or not current:
+    if not isinstance(bins, int) or isinstance(bins, bool) or bins < 2 or len(reference) == 0 or len(current) == 0:
         raise ValueError("Provide nonempty populations and at least two bins")
     baseline = np.asarray(reference, dtype=float)
     observed = np.asarray(current, dtype=float)
+    if baseline.ndim != 1 or observed.ndim != 1:
+        raise ValueError("Populations must be one-dimensional")
     if not np.isfinite(baseline).all() or not np.isfinite(observed).all():
         raise ValueError("Populations must contain finite values")
     boundaries = np.unique(np.quantile(baseline, np.linspace(0, 1, bins + 1)))

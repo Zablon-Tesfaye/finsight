@@ -7,6 +7,8 @@ def population_stability_index(reference: list[float], current: list[float],
                                bins: int = 10, smoothing: float = 1e-6) -> float:
     if not isinstance(bins, int) or isinstance(bins, bool) or bins < 2 or len(reference) == 0 or len(current) == 0:
         raise ValueError("Provide nonempty populations and at least two bins")
+    if not np.isfinite(smoothing) or smoothing <= 0:
+        raise ValueError("Smoothing must be finite and positive")
     baseline = np.asarray(reference, dtype=float)
     observed = np.asarray(current, dtype=float)
     if baseline.ndim != 1 or observed.ndim != 1:

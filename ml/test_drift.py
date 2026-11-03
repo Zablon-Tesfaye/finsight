@@ -23,3 +23,13 @@ class DriftParameterTests(unittest.TestCase):
     def test_nan_smoothing_rejected(self):
         with self.assertRaises(ValueError):
             population_stability_index([1, 2], [1, 3], smoothing=float("nan"))
+
+
+class DriftShapeTests(unittest.TestCase):
+    def test_multidimensional_population_is_rejected(self):
+        with self.assertRaises(ValueError):
+            population_stability_index([[1, 2], [3, 4]], [1, 2])
+
+    def test_non_scalar_smoothing_is_rejected(self):
+        with self.assertRaises(ValueError):
+            population_stability_index([1, 2], [2, 3], smoothing=[0.1])

@@ -21,6 +21,11 @@ class Confusion:
             raise ValueError("Confusion counts must be nonnegative")
 
     @property
+    def total(self) -> int:
+        """Number of evaluated examples represented by this confusion matrix."""
+        return self.true_positive + self.false_positive + self.false_negative + self.true_negative
+
+    @property
     def recall(self) -> float | None:
         denominator = self.true_positive + self.false_negative
         return self.true_positive / denominator if denominator else None

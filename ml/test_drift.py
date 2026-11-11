@@ -33,3 +33,13 @@ class DriftShapeTests(unittest.TestCase):
     def test_non_scalar_smoothing_is_rejected(self):
         with self.assertRaises(ValueError):
             population_stability_index([1, 2], [2, 3], smoothing=[0.1])
+
+
+class DriftTypeTests(unittest.TestCase):
+    def test_boolean_smoothing_rejected(self):
+        with self.assertRaises(ValueError):
+            population_stability_index([1, 2], [2, 3], smoothing=True)
+
+    def test_string_smoothing_rejected(self):
+        with self.assertRaises(ValueError):
+            population_stability_index([1, 2], [2, 3], smoothing="0.1")
